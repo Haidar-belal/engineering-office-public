@@ -1,6 +1,7 @@
 const { Owner, Contractor, CopyProjectOwner, Office, CopyProject, CopyProjectDocument, Sequelize } = require('../models');
 const axios = require('axios');
-
+require('dotenv').config();
+const jwt = require('jsonwebtoken');
 
 exports.ownerLogin = async (req, res, next) => {
     const { email, password } = req.body;
@@ -13,7 +14,10 @@ exports.ownerLogin = async (req, res, next) => {
         return res.status(401).json({ massage: "email not found" });
     } else {
         if (owner.password === password) {
-            return res.status(200).json(owner);
+            const token = jwt.sign({ id: owner.owner_id.toString(), email: owner.email, password: owner.password }, process.env.SECRET_KEY, {
+            expiresIn: "10h",
+            });
+            return res.status(200).json({token: token, owner: owner});
         }
         return res.status(401).json({ massage: "password not correct" });
     }
@@ -38,7 +42,6 @@ exports.ownerSearch = async (req, res, next) => {
 };
 
 exports.storeOwner = async (req, res, next) => {
-
     const {
         first_name,
         last_name,
@@ -83,7 +86,6 @@ exports.storeOwner = async (req, res, next) => {
 
 
 exports.updateOwner = async (req, res, next) => {
-    const { id } = req.params;
     const {
         first_name,
         last_name,
@@ -119,7 +121,7 @@ exports.updateOwner = async (req, res, next) => {
                 }
             }, {
                 where: {
-                    owner_id: id
+                    owner_id: req.user.id
                 }
             });
             return res.status(200).json({ msg: 'owner updated successfully!' });
@@ -134,7 +136,7 @@ exports.updateOwner = async (req, res, next) => {
 
 exports.storeOwnerProject = async (req, res, next) => {
 
-    const { new_owner_id, owner_id } = req.body;
+    const { new_owner_id } = req.body;
     const { id } = req.params; //copy_project_id
 
     try {
@@ -144,7 +146,7 @@ exports.storeOwnerProject = async (req, res, next) => {
             ],
             where: {
                 copy_project_id: id,
-                owner_id: owner_id
+                owner_id: req.user.id
             }
         });
         if (!projectOwner) {
@@ -176,8 +178,6 @@ exports.storeOwnerProject = async (req, res, next) => {
 
 exports.getAllOfficesOfOneOwner = async (req, res, next) => {
 
-    const { id } = req.params; // owner_id
-
     try {
         const offices = await Office.findAll({
             include: {
@@ -187,7 +187,7 @@ exports.getAllOfficesOfOneOwner = async (req, res, next) => {
                 include: {
                     model: Owner,
                     where: {
-                        owner_id: id
+                        owner_id: req.user.id
                     },
                     attributes: [],
                     through: {
@@ -204,7 +204,7 @@ exports.getAllOfficesOfOneOwner = async (req, res, next) => {
 
 
 exports.getOwnerProjectInfo = async (req, res, next) => {
-    const { owner_id, office_id } = req.params;
+    const { office_id } = req.params;
     try {
         const office = await Office.findOne({
             where: {
@@ -212,7 +212,7 @@ exports.getOwnerProjectInfo = async (req, res, next) => {
             }
         });
         const { data } = await axios.post(`http://${office.host}/owner/projects-info/${id}`, {
-            owner_id: owner_id
+            owner_id: req.user.id
         });
 
         return res.status(200).json(data);
@@ -253,12 +253,12 @@ exports.getOwnerProjectInfo = async (req, res, next) => {
 
 exports.storeProject = async (req, res, next) => {
 
-    const { lat, lng, name, comment, office_id, owner_id } = req.body;
+    const { lat, lng, name, comment, office_id } = req.body;
 
     try {
         const owner = await Owner.findOne({
             where: {
-                owner_id: owner_id
+                owner_id: req.user.id
             }
         });
         const newProject = await CopyProject.create({
@@ -303,11 +303,10 @@ exports.getAllOffices = async (req, res, next) => {
 };
 
 exports.closerContractors = async (req, res, next) => {
-    const { owner_id } = req.body;
     try {
         const owner = await Owner.findOne({
             where: {
-                owner_id: owner_id
+                owner_id: req.user.id
             }
         })
         const contractors = await Contractor.findAll({

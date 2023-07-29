@@ -10,7 +10,14 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      this.belongsTo(models.Material, {
+        foreignKey: "material_id",
+        as: "material"
+      });
+      this.belongsTo(models.Owner, {
+        foreignKey: "owner_id",
+        as: "owner"
+      });
     }
   }
   Comment.init({
@@ -20,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    commnet:  {
+    text:  {
       type: DataTypes.STRING,
       allowNull: true
     },

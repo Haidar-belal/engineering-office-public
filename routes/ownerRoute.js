@@ -20,19 +20,25 @@ const ownerUpload = multer({ storage: fileStorage, fileFilter: fileFilter });
 
 const ownerController = require('../controllers/ownerController');
 
-router.post('/owner-login', ownerController.ownerLogin);
+const isAuth = require('../middleware/isAuthMiddleware');
 
-router.post('/owner/search', ownerController.ownerSearch);
+const isOwner = require('../middleware/isOwnerMiddleware');
 
-router.post('/owner/store', ownerController.storeOwner);
+router.post('/login', ownerController.ownerLogin);
 
-router.put('/owner/edit/:id', ownerController.updateOwner);
+router.post('/store', ownerController.storeOwner);
 
-router.post('/owner-project/store/:id', ownerController.storeOwnerProject);
+router.use(isAuth, isOwner);
 
-router.get('/owner/offices/:id', ownerController.getAllOfficesOfOneOwner);
+router.post('/search', ownerController.ownerSearch);
 
-router.get('/owner/projects-info/:owner_id/:office_id', ownerController.getOwnerProjectInfo); // TODO test
+router.put('/edit', ownerController.updateOwner);
+
+router.post('/project/store/:id', ownerController.storeOwnerProject);
+
+router.get('/offices', ownerController.getAllOfficesOfOneOwner);
+
+router.get('/projects-info/:office_id', ownerController.getOwnerProjectInfo); // TODO test
 
 // router.get('/owner/projects/:id', ownerController.getAllProjectsForOneOwner); // TODO override
 

@@ -15,7 +15,8 @@ exports.getCommentForOneMaterial = async (req, res, next) => {
 };
 
 exports.storeComment = async (req, res, next) => {
-    const { owner_id, material_id } = req.body;
+    const { material_id } = req.body;
+    const { id } = req.user;
     let path;
     if (req.file) {
         path  = req.file.path;
@@ -23,7 +24,7 @@ exports.storeComment = async (req, res, next) => {
     try {
         const comment = await Comment.create({
             text: req.body.text || null,
-            owner_id: owner_id,
+            owner_id: id,
             material_id: material_id,
             image: path || null
         });
@@ -46,7 +47,7 @@ exports.updateComment = async (req, res, next) => {
             comment.image = req.file.path;
         }
         await comment.save();
-        return res.status(201).json({message: 'comment updated sucessfully'});
+        return res.status(201).json({message: 'comment updated successfully'});
     } catch (error) {
         return res.status(500).json(error);
     }
@@ -54,18 +55,17 @@ exports.updateComment = async (req, res, next) => {
 
 exports.deleteComment = async (req, res, next) => {
     const { id } = req.params;
-    const { owner_id } = req.query;
     try {
         const comment = await Comment.findByPk(id);
         if (!comment) {
             return res.status(404).json({message: 'comment not found'});
         }
-        if (comment.owner_id != owner_id) {
+        if (comment.owner_id != req.user.id) {
             return res.status(403).json({message: 'comment not to you'});
         }
         await comment.destroy();
-        return res.status(201).json({message: 'comment deleted sucessfully'});
+        return res.status(201).json({message: 'comment deleted successfully'});
     } catch (error) {
         return res.status(500).json(error);
     }
-};
+}; 

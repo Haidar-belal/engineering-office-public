@@ -4,7 +4,11 @@ const axios = require('axios');
 
 exports.getAllAdvertisements = async (req, res, next) => {
     try {
-        const advertisements = await Advertisement.findAll();
+        const advertisements = await Advertisement.findAll({
+            where: {
+                contractor_id: req.user.id,
+            }
+        });
         return res.status(200).json(advertisements);
     } catch (error) {
         return res.status(500).json(error);
@@ -26,13 +30,13 @@ exports.getOneAdvertisement = async (req, res, next) => {
 };
 
 exports.storeAdvertisement = async (req, res, next) => {
-    const { contractor_id } = req.body;
+    const { id } = req.user;
     const { path } = req.file;
     try {
         const advertisement = await Advertisement.create({
             image: path,
             status: 0,
-            contractor_id: contractor_id,
+            contractor_id: id,
         });
         return res.status(200).json(advertisement);
     } catch (error) {
@@ -41,7 +45,6 @@ exports.storeAdvertisement = async (req, res, next) => {
 };
 
 exports.updateAdvertisement = async (req, res, next) => {
-    const { contractor_id } = req.body;
     const { id } = req.params; //advertisement_id
     const { path } = req.file;
     try {
@@ -50,7 +53,7 @@ exports.updateAdvertisement = async (req, res, next) => {
                 advertisement_id: id
             }
         });
-        if (advertisement.contractor_id != contractor_id) {
+        if (advertisement.contractor_id != req.user.id) {
             return res.status(403).json({message: "this advertisement not for you"})
         }
         fs.unlinkSync(advertisement.image);
@@ -82,8 +85,11 @@ exports.deleteAdvertisement = async (req, res, next) => {
     let { id } = req.params;
     try {
         const advertisement = await Advertisement.findByPk(id);
-            await advertisement.destroy();
-            return res.status(200).json({massage: 'advertisement deleted sucessfully'});
+        if (advertisement.contractor_id != req.user.id) {
+            return res.status(403).json({ message: 'this advertisement not for you'})
+        }
+        await advertisement.destroy();
+        return res.status(200).json({massage: 'advertisement deleted successfully'});
     } catch (error) {
         return res.status(500).json(error.message);
     }

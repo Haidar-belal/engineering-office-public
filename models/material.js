@@ -38,6 +38,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         as: "contractor"
       });
+      this.hasMany(models.Comment, {
+        foreignKey: "material_id",
+        as: "comments"
+      });
       // this.belongsToMany(models.Stage, {
       //   foreignKey: {
       //     name: 'material_id',

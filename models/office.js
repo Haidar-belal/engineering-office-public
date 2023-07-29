@@ -24,6 +24,13 @@ module.exports = (sequelize, DataTypes) => {
           },
           as: "evaluationenginnermaterials"
           });
+        this.hasMany(models.OfficeOffer, {
+          foreignKey: {
+              name: 'office_id',
+              allowNull: true
+          },
+          as: "officeoffers"
+          });
         this.hasMany(models.CopyProject, {
           foreignKey: {
               name: 'office_id',
