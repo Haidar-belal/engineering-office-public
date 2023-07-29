@@ -4,6 +4,10 @@ const router = express.Router();
 
 const advertisementController = require('../controllers/advertisementController');
 
+const isAuth = require('../middleware/isAuthMiddleware');
+
+const isContractor = require('../middleware/isContractorMiddleware');
+
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/images/advertisements');
@@ -18,17 +22,19 @@ const fileFilter = (req, file, cb) => {
 
 const advertisementUpload = multer({ storage: fileStorage, fileFilter: fileFilter });
 
-router.get('/advertisements', advertisementController.getAllAdvertisements);
-
-router.get('/advertisement/:id', advertisementController.getOneAdvertisement);
-
-router.post('/advertisement/store', advertisementUpload.single('image'), advertisementController.storeAdvertisement);
-
-router.put('/advertisement/edit/:id', advertisementUpload.single('image'), advertisementController.updateAdvertisement);
-
 router.put('/advertisement/change-status/:id', advertisementController.changeAdvertisementStatus);
 
-router.delete('/advertisement/delete/:id', advertisementController.deleteAdvertisement);
+router.use(isAuth, isContractor);
+
+router.get('/', advertisementController.getAllAdvertisements);
+
+router.get('/:id', advertisementController.getOneAdvertisement);
+
+router.post('/store', advertisementUpload.single('image'), advertisementController.storeAdvertisement);
+
+router.put('/edit/:id', advertisementUpload.single('image'), advertisementController.updateAdvertisement);
+
+router.delete('/delete/:id', advertisementController.deleteAdvertisement);
 
 module.exports = router
 

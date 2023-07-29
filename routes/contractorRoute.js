@@ -7,6 +7,10 @@ const contractorController = require('../controllers/contractorController');
 
 const validation = require('../validation/contractorValidation');
 
+const isAuth = require('../middleware/isAuthMiddleware');
+
+const isContractor = require('../middleware/isContractorMiddleware');
+
 const fileStoragem = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/images/materials');
@@ -19,14 +23,12 @@ const fileFilterm = (req, file, cb) => {
         cb(null, true);
 };
 
-
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/pdf/contractor');
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname);
-        // new date().toISOString() + '-' + 
+        cb(null, Date.now() + "-" + file.originalname);
     }
 });
 const fileFilter = (req, file, cb) => {
@@ -37,27 +39,29 @@ const upload = multer({ storage: fileStorage, fileFilter: fileFilter });
 
 const contractorUpload = multer({ storage: fileStoragem, fileFilter: fileFilterm });
 
-router.post('/contractor-login', validation.contractorLogin, contractorController.contractorLogin);
+router.post('/login', validation.contractorLogin, contractorController.contractorLogin);
 
-router.get('/contractors', contractorController.getAllContractors);
+router.post('/store', validation.storeContractor, contractorController.storeContractor);
 
-router.post('/contractor/material/store', validation.storeMaterial, contractorUpload.single('image'), contractorController.storeMarerial);
+router.use(isAuth, isContractor);
 
-router.put('/contractor/material/edit/:id',  validation.upateMaterial, contractorUpload.single('image'), contractorController.updateMarerial);
+router.get('/', contractorController.getAllContractors);
 
-router.delete('/contractor/material/delete/:id', contractorController.deleteMarerial);
+router.post('/material/store', validation.storeMaterial, contractorUpload.single('image'), contractorController.storeMarerial);
 
-router.post('/contractor/store', validation.storeContractor, contractorController.storeContractor);
+router.put('/material/edit/:id',  validation.upateMaterial, contractorUpload.single('image'), contractorController.updateMarerial);
+
+router.delete('/material/delete/:id', contractorController.deleteMarerial);
 
 router.post('/category/store', contractorUpload.single('image'), contractorController.storeCategory);
 
-router.post('/contractor-main-document/store', upload.single('pdf'), contractorController.contractorMainDocumentStore);
+router.post('/main-document/store', upload.single('pdf'), contractorController.contractorMainDocumentStore);
 
-router.get('/contractor/office', contractorController.getAllOfficeContractor);
+router.get('/office', contractorController.getAllOfficeContractor);
 
-router.get('/contractor/office-projects/:id', contractorController.getAllProjectInOneOffice);
+router.get('/office-projects/:id', contractorController.getAllProjectInOneOffice);
 
-router.get('/contractor/stage-materials/:id', contractorController.getContractorMaterialFromOneStage);
+router.get('/stage-materials/:id', contractorController.getContractorMaterialFromOneStage);
 
 module.exports = router
 

@@ -1,5 +1,7 @@
 const { Contractor, Owner, Material, Category, ContractorMainDocument, Office, CopyProject } = require('../models');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 exports.contractorLogin = async (req, res, next) => {
     let { email, password } = req.body;
@@ -13,7 +15,10 @@ exports.contractorLogin = async (req, res, next) => {
             return res.status(401).json({massage: "email not found"});
         } else {
             if (contractor.password === password) {
-                return res.status(200).json(contractor);
+                const token = jwt.sign({ id: contractor.contractor_id.toString(), email: contractor.email, password: contractor.password }, process.env.SECRET_KEY, {
+                expiresIn: "10h",
+                });
+                return res.status(200).json({token: token, contractor: contractor});
             }
             return res.status(401).json({massage: "password is invalid"});
         }
@@ -77,14 +82,14 @@ exports.storeContractor = async (req, res, next) => {
 };
 
 exports.storeMarerial = async (req, res, next) => {
-    let { contractor_id, unit_price, name, qualification, category_id } = req.body;
+    let { unit_price, name, qualification, category_id } = req.body;
     let { path } = req.file;
     try {
         const material = await Material.create({
             name: name,
             unit_price: unit_price,
             category_id: category_id,
-            contractor_id: contractor_id,
+            contractor_id: req.user.id,
             qualification: qualification,
             image: path,
         });
@@ -116,8 +121,11 @@ exports.deleteMarerial = async (req, res, next) => {
     let { id } = req.params;
     try {
         const material = await Material.findByPk(id);
-            await material.destroy();
-            return res.status(200).json({massage: 'material deleted sucessfully'});
+        if (material.material_id !== req.user.id) {
+            return res.status(403).json({ message: 'material not for you' })
+        }
+        await material.destroy();
+        return res.status(200).json({massage: 'material deleted successfully'});
     } catch (error) {
         return res.status(500).json(error.message);
     }
@@ -154,22 +162,21 @@ exports.storeCategory = async (req, res, next) => {
 };
 
 exports.contractorMainDocumentStore = async (req, res, next) => {
-    const { contractor_id, comment } = req.body;
+    const { comment } = req.body;
     const { path } = req.file;
     try {
-        const contractorMainDocumect = await ContractorMainDocument.create({
-            contractor_id: contractor_id,
+        const contractorMainDocument = await ContractorMainDocument.create({
+            contractor_id: req.user.id,
             document: path,
             comment: comment
         })
-        return res.status(200).json(contractorMainDocumect);
+        return res.status(200).json(contractorMainDocument);
     } catch (error) {
         return res.status(200).json(error);
     }
 };
 
 exports.getAllOfficeContractor = async (req, res, next) => {
-    const { contractor_id } = req.body;
     try {
         const office = await Office.findAll({
             include: {
@@ -182,7 +189,7 @@ exports.getAllOfficeContractor = async (req, res, next) => {
                     through: {
                         attributes: [],
                         where: {
-                            contractor_id: contractor_id
+                            contractor_id: req.user.id
                         }
                     }
                 } 
@@ -193,10 +200,9 @@ exports.getAllOfficeContractor = async (req, res, next) => {
         return res.status(200).json(error.message);
     }
 };
-// fetch from anather app
+// fetch from anther app
 exports.getAllProjectInOneOffice = async (req, res, next) => {
     const { id } = req.params;
-    const { contractor_id } = req.body;
     try {
         const office = await Office.findOne({
             where: { office_id: id },
@@ -205,7 +211,7 @@ exports.getAllProjectInOneOffice = async (req, res, next) => {
             return res.status(404).json({message: 'office not found'})
         }
         const {data} = await axios.post(`http://${office.host}/contractor-projects`, {
-            contractor_id: contractor_id
+            contractor_id: req.user.id
         });
         return res.status(200).json(data)
     } catch (error) {
@@ -215,11 +221,11 @@ exports.getAllProjectInOneOffice = async (req, res, next) => {
 
 exports.getContractorMaterialFromOneStage = async (req, res, next) => {
     const { id } = req.params;
-    const { contractor_id, office_id } = req.body;
+    const { office_id } = req.body;
     try {
         const office = await Office.findPyBk(office_id);
         const {data} = await axios.post(`https://${office.host}/contractor-materials/${id}`, {
-        contractor_id: contractor_id,
+        contractor_id: req.user.id,
         });
         return res.status(200).json(data)
     } catch (error) {

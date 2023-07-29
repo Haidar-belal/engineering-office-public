@@ -32,10 +32,14 @@ module.exports = (sequelize, DataTypes) => {
         through: models.CopyProjectContractor,
         onDelete: 'SET NULL'
       });
-      this.hasMany(models.Advertisement, {
-        foreignKey: 'contractor_id',
-        as: 'advertisements'
-      });
+      // this.belongsToMany(models.Stage, {
+      //   through: models.StageContractor,
+      //   onDelete: 'SET NULL',
+      //   foreignKey: {
+      //     name: 'contractor_id',
+      //     allowNull: true
+      //   },
+      // });
       this.hasMany(models.ContractorOffer, {
         foreignKey: {
           name: 'contractor_id',

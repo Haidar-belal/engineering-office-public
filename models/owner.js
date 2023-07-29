@@ -33,6 +33,10 @@ module.exports = (sequelize, DataTypes) => {
         through: models.CopyProjectOwner,
         onDelete: 'SET NULL'
       });
+      this.hasMany(models.Comment, {
+        foreignKey: "owner_id",
+        as: "comments"
+      });
     }
   }
   Owner.init({
@@ -52,8 +56,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     card_id: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
+      allowNull: false
     },
     address: {
       type: DataTypes.STRING,

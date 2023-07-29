@@ -7,6 +7,8 @@ const commentController = require('../controllers/commnetController');
 
 const validation = require('../validation/commentValidation');
 
+const isAuth = require('../middleware/isAuthMiddleware');
+
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/images/comments');
@@ -21,13 +23,15 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: fileStorage, fileFilter: fileFilter });
 
-router.get('/comments/:id', commentController.getCommentForOneMaterial);
+router.use(isAuth);
 
-router.post('/comments/store',upload.single('image'), validation.storeComment, commentController.storeComment);
+router.get('/:id', commentController.getCommentForOneMaterial);
 
-router.put('/comments/edit/:id', upload.single('image'), validation.updateComment, commentController.updateComment);
+router.post('/store',upload.single('image'), validation.storeComment, commentController.storeComment);
 
-router.delete('/comments/delete/:id', commentController.deleteComment);
+router.put('/edit/:id', upload.single('image'), validation.updateComment, commentController.updateComment);
+
+router.delete('/delete/:id', commentController.deleteComment);
 
 
 module.exports = router;

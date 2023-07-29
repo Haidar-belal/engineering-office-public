@@ -35,6 +35,13 @@ module.exports = (sequelize, DataTypes) => {
         },
         as: "category"
       });
+      this.hasMany(models.OfficeOfferCategory, {
+        foreignKey: {
+          name: 'category_id',
+          allowNull: true
+        },
+        as: "officeoffercategories"
+      });
     }
   }
   Category.init({
