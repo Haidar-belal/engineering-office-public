@@ -4,7 +4,7 @@ A platform for collaboration between contractors, owners, and engineering office
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/yourusername/engineer-office-public.git`
+1. Clone the repository: `git clone https://github.com/Haidar-belal/engineering-office-public.git`
 2. Install dependencies: `npm install`
 
 ## Usage
