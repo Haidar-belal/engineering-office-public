@@ -9,9 +9,20 @@ A platform for collaboration between contractors, owners, and engineering office
 
 ## Usage
 
-1. Rename `.env.example` to `.env` and configure environment variables.
-2. Run the project: `npm start`
-3. Access the application at `http://localhost:3000`
+1. Open `config.json` in the config folder.
+2. Update the `development` object with your database configuration:
+   
+   ```json
+   "development": {
+     "username": "your_db_username",
+     "password": "your_db_password",
+     "database": "your_db_name",
+     "host": "127.0.0.1",
+     "dialect": "mysql"
+   }
+3. Rename `.env.example` to `.env` and configure environment variables.
+4. Run the project: `npm start`
+5. Access the application at `http://localhost:3000`
 
 ## Questions
 
